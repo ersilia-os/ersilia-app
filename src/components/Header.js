@@ -34,7 +34,7 @@ class Header extends Component {
       <GAppBar position="absolute">
         <Toolbar>
           <a
-            href="http://modelhub.ai/"
+            href="http://ersilia.io/"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -43,7 +43,7 @@ class Header extends Component {
           <GDiv>
             <IconButton aria-haspopup="false" color="inherit">
               <a
-                href="https://github.com/modelhub-ai"
+                href="https://github.com/ersilia-os/"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -52,7 +52,7 @@ class Header extends Component {
             </IconButton>
             <IconButton aria-haspopup="false" color="inherit">
               <a
-                href="https://hub.docker.com/u/modelhub/"
+                href="https://hub.docker.com/u/ersilia/"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -61,7 +61,7 @@ class Header extends Component {
             </IconButton>
             <IconButton aria-haspopup="false" color="inherit">
               <a
-                href="https://modelhub.readthedocs.io/en/latest/"
+                href="https://ersilia.readthedocs.io/en/latest/"
                 target="_blank"
                 rel="noopener noreferrer"
               >

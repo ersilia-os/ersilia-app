@@ -25,11 +25,11 @@ class Welcome extends Component {
     });
     return (
       <GMain>
-        <a href="http://modelhub.ai/" target="_blank" rel="noopener noreferrer">
+        <a href="http://ersilia.io/" target="_blank" rel="noopener noreferrer">
           <Gimg src={logo} alt="logo" />
         </a>
         <Typography variant="title" noWrap>
-          Welcome to Modelhub!<br />Select a model to start.
+          Welcome to Ersilia!<br />Select a model.
         </Typography>
       </GMain>
     );
