@@ -1,2 +1,3 @@
 # modelhub-app
-React web application that consumes the modelhub REST API.
+
+Streamlit app as a GUI for the Ersilia Model Hub
