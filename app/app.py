@@ -1,8 +1,6 @@
 import streamlit as st
-from rdkit import Chem
 import os
 import csv
-from rdkit.Chem import AllChem, Draw
 from ersilia import ErsiliaModel
 from ersilia.hub.fetch.fetch import ModelFetcher
 
