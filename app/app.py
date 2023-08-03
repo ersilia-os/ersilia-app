@@ -1,127 +1,101 @@
 import streamlit as st
 from rdkit import Chem
 import os
-import joblib
-import pandas as pd
-import collections
 import csv
-import lazyqsar
 from rdkit.Chem import AllChem, Draw
-
-# Theming
-
-st.set_page_config(
-    page_title="Open Source Malaria Models",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-st.title("Open Source Malaria Models")
-
-# Variables
+from ersilia import ErsiliaModel
+from ersilia.hub.fetch.fetch import ModelFetcher
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
-model_names = {
-    "osm_all_bin1_morgan": "Malaria IC50 (1uM)",
-    "osm_all_bin25_morgan": "Malaria IC50 (2.5uM)",
-}
+# Fetch Model
+params = st.experimental_get_query_params()
+if not "model_id" in params:
+    st.error("You need to enter a model identifier as part of the URL, for example: http://localhost:8503/?model_id=eos7yti")
+model_id = params["model_id"][0]
+
+mf = ModelFetcher(force_from_hosted=True, hosted_url=None)
+if not mf.exists(model_id):
+    mf.fetch(model_id)
+
+#get info to populate page
+em = ErsiliaModel(model=model_id)
+info = em.info()
+
+# Extract the desired values
+identifier = info["metadata"]["Identifier"]
+slug = info["metadata"]["Slug"]
+title = info["metadata"]["Title"]
+description = info["metadata"]["Description"]
+task = info["metadata"]["Task"]
+interpretation = info["metadata"]["Interpretation"]
+source_code = info["metadata"]["Source Code"]
+publication = info["metadata"]["Publication"]
+license = info["metadata"]["License"]
+
+# Theming
+st.set_page_config(
+    page_title=title,
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+st.markdown('<style>body { color: #50285a; }</style>', unsafe_allow_html=True)
 
 
-# Load models
-
-def load_models():
-    models = {}
-    models_dir = os.path.join(ROOT, "..", "models")
-    for fn in os.listdir(models_dir):
-        mn = fn.split(".joblib")[0]
-        if mn in model_names.keys():
-            display_name = model_names[mn]
-            models[display_name] = joblib.load(os.path.join(models_dir, fn))
-    return models
-
-
-models = load_models()
-print(models)
+st.title(title,)
+st.write(description,)
 
 # Side bar
 
-st.sidebar.title("Lightweight Models")
-
-st.sidebar.markdown("Lightweight models have been trained using the [Lazy QSAR library](https://github.com/ersilia-os/lazy-qsar).")
-
-
-st.sidebar.header("Plasmodium falciparum")
-texts = model_names.values()
-st.sidebar.text("\n".join(texts))
-
+st.sidebar.title(slug)
+st.sidebar.header("Model ID")
+st.sidebar.markdown(identifier)
+st.sidebar.header("Results")
+st.sidebar.markdown(interpretation)
+st.sidebar.header("Publication")
+st.sidebar.markdown(publication)
+st.sidebar.header("Source Code")
+st.sidebar.markdown(source_code)
+st.sidebar.header("License")
+st.sidebar.markdown(license)
 
 # Input
+st.header("Input molecules")
+st.markdown("Input molecules as a list of SMILES strings. For example:")
+smiles = []
+with open(os.path.join(ROOT, "..", "data", "example.csv"), "r") as f:
+    reader = csv.reader(f)
+    for r in reader:
+        smiles += [r[0]]
+example_smi = ("\n".join(smiles))
+st.text(example_smi)
 
-input_molecules = st.text_area(label="Input molecules")
-
+input_molecules = st.text_area(label="",height=125, label_visibility="collapsed")
 input_molecules = input_molecules.split("\n")
 input_molecules = [inp for inp in input_molecules if inp != ""]
 
-def is_valid_input_molecules():
-    if len(input_molecules) == 0:
-        return False
-    for input_molecule in input_molecules:
-        mol = Chem.MolFromSmiles(input_molecule)
-        if mol is None:
-            st.error("Input {0} is not a valid SMILES".format(input_molecule))
+button=st.button('Run')
+if (button==True):
+  
+    def is_valid_input_molecules():
+        if len(input_molecules) == 0:
             return False
-    return True
+        for input_molecule in input_molecules:
+            mol = Chem.MolFromSmiles(input_molecule)
+            if mol is None:
+                st.error("Input {0} is not a valid SMILES".format(input_molecule))
+                return False
+        return True
 
+    if is_valid_input_molecules():
 
-def get_molecule_image(smiles):
-    m = Chem.MolFromSmiles(smiles)
-    AllChem.Compute2DCoords(m)
-    opts = Draw.DrawingOptions()
-    opts.bgColor = None
-    im = Draw.MolToImage(m, size=(200, 200), options=opts)
-    return im
+        em.serve()
+        df = em.run(input=input_molecules, output="pandas")
+        em.close()
 
+        st.dataframe(df, hide_index=True)
 
-if is_valid_input_molecules():
-    results = collections.OrderedDict()
-    results["smiles"] = input_molecules
-    print(results)
-    for k in models:
-        v = models[k]
-        results[k] = list(v.predict_proba(input_molecules)[:,1])
-    data = pd.DataFrame(results)
-
-    def convert_df(df):
-        return df.to_csv(index=False).encode("utf-8")
-
-    csv = convert_df(data)
-
-    st.download_button(
-        "Download as CSV", csv, "predictions.csv", "text/csv", key="download-csv"
-    )
-
-
-    #Display predictions
-    st.header("Input molecules")
-    for v in data.iterrows():
-        idx = v[0] +1 #Index from 1
-        r = v[1]
-        st.markdown("### {0}: `{1}`".format(idx, r["smiles"]))
-        cols = st.columns(5)
-        image = get_molecule_image(r["smiles"])
-        cols[0].image(image)
-        texts = [
-            "Malaria IC50 (1uM) : {0:.3f}".format(r["Malaria IC50 (1uM)"]),
-            "Malaria IC50 (2.5uM): {0:.3f}".format(r["Malaria IC50 (2.5uM)"]),
-        ]
-        cols[1].text("\n".join(texts))
-
-else:
-    st.markdown("Input molecules as a list of SMILES strings. For example:")
-    smiles = []
-    with open(os.path.join(ROOT, "..", "data", "example.csv"), "r") as f:
-        reader = csv.reader(f)
-        for r in reader:
-            smiles += [r[0]]
-    st.text("\n".join(smiles))
+        csv_data = df.to_csv(index=False).encode()
+        st.download_button(
+            "Download as CSV", csv_data, "{}_predictions.csv".format(model_id), "text/csv", key="download-csv"
+        )
