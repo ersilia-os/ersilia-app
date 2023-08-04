@@ -5,6 +5,8 @@ from ersilia import ErsiliaModel
 from ersilia.hub.fetch.fetch import ModelFetcher
 from rdkit import Chem
 from rdkit.Chem import AllChem, Draw
+import pandas as pd
+
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
@@ -78,11 +80,18 @@ example_smi = ("\n".join(smiles))
 st.text(example_smi)
 
 input_molecules = st.text_area(label="",height=125, label_visibility="collapsed")
+file_csv= st.file_uploader("Upload csv file", type= ["csv"])
 input_molecules = input_molecules.split("\n")
 input_molecules = [inp for inp in input_molecules if inp != ""]
 
+
+
 button=st.button('Run')
 if (button==True):
+
+    if file_csv is not None:
+        data_file=pd.read_csv(file_csv)
+        input_molecules=data_file['smiles'].tolist()
 
     def get_molecule_image(smiles):
         m = Chem.MolFromSmiles(smiles)
@@ -128,3 +137,4 @@ if (button==True):
         st.download_button(
             "Download as CSV", csv_data, "{}_predictions.csv".format(model_id), "text/csv", key="download-csv"
         )
+
