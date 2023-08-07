@@ -10,14 +10,6 @@ import pandas as pd
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
 # Functions
-def get_molecule_image(smiles):
-    m = Chem.MolFromSmiles(smiles)
-    AllChem.Compute2DCoords(m)
-    opts = Draw.DrawingOptions()
-    opts.bgColor = None
-    im = Draw.MolToImage(m, size=(200, 200), options=opts)
-    return im   
-
 def is_valid_input_molecules():
     if len(input_molecules) == 0:
         return False
@@ -57,13 +49,21 @@ license = info["metadata"]["License"]
 # Theming
 st.set_page_config(
     page_title=title,
+    page_icon = os.path.join(ROOT, "..", "data", "Symbol_Plum.png"),
     layout="wide",
-    initial_sidebar_state="expanded"
-)
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': None,
+        'Report a bug': None,
+        'About': "# Ersilia Open Source Initiative. [Read more](https://ersilia.io/about-us) about us. [Support](https://ersilia.io/donate) our mission"
+    },
+    )
 
 css = r'''
     <style>
         [data-testid="stForm"] {border: 0px}
+        [data-testid="stToolbar"] {visibility: hidden !important;}
+        footer {visibility: hidden !important;}
     </style>
 '''
 st.markdown(css, unsafe_allow_html=True)
