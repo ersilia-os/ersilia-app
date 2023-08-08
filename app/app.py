@@ -105,7 +105,7 @@ with st.form("text uploader", clear_on_submit=True):
 if (submitted_written==True):
     input_molecules = written_input.split("\n")
     input_molecules = [inp for inp in input_molecules if inp != ""]
-
+    
 st.markdown("Or upload a CSV file with a single column named SMILES")
 with st.form("csv uploader", clear_on_submit=True):
     file_csv= st.file_uploader(label="", type= ["csv"], label_visibility="collapsed")
@@ -116,13 +116,14 @@ if (submitted_csv==True):
     
 if submitted_written | submitted_csv == True:
     if is_valid_input_molecules():
-        em.serve()
-        df = em.run(input=input_molecules, output="pandas")
-        em.close()
-        st.subheader("Results")
-        df.rename(columns={"key":"InChiKey", "input": "SMILES"}, inplace=True)
-        st.dataframe(df, hide_index=True)
-        csv_data = df.to_csv(index=False).encode()
-        st.download_button(
-            "Download as CSV", csv_data, "{}_predictions.csv".format(model_id), "text/csv", key="download-csv"
-        )
+        with st.spinner('Running the model...'):
+            em.serve()
+            df = em.run(input=input_molecules, output="pandas")
+            em.close()
+            st.subheader("Results")
+            df.rename(columns={"key":"InChiKey", "input": "SMILES"}, inplace=True)
+            st.dataframe(df, hide_index=True)
+            csv_data = df.to_csv(index=False).encode()
+            st.download_button(
+                "Download as CSV", csv_data, "{}_predictions.csv".format(model_id), "text/csv", key="download-csv"
+            )
