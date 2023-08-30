@@ -112,7 +112,7 @@ with st.form("csv uploader", clear_on_submit=True):
     submitted_csv = st.form_submit_button("Run")
 if (submitted_csv==True): 
     data_file=pd.read_csv(file_csv)
-    input_molecules=data_file['smiles'].tolist()
+    input_molecules=data_file['SMILES'].tolist()
     
 if submitted_written | submitted_csv == True:
     if is_valid_input_molecules():
