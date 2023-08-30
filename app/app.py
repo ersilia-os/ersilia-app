@@ -66,6 +66,7 @@ css = r'''
         footer {visibility: hidden !important;}
     </style>
 '''
+
 st.markdown(css, unsafe_allow_html=True)
 
 st.title(title)
@@ -77,8 +78,8 @@ st.sidebar.image(os.path.join(ROOT, "..","data", "Ersilia_Brand.png"), width=150
 st.sidebar.title('Model Information')
 st.sidebar.header("Description")
 st.sidebar.markdown(description)
-st.sidebar.header("Identifiers:")
-st.sidebar.markdown("* {0}\n* {1}".format(identifier, slug))
+st.sidebar.header("Identifiers")
+st.sidebar.markdown("{0} | {1}".format(identifier,slug))
 st.sidebar.header("Results")
 st.sidebar.markdown(interpretation)
 st.sidebar.header("References")
@@ -86,7 +87,6 @@ st.sidebar.markdown("🔗 [Publication]({})".format(publication))
 st.sidebar.markdown("🔗 [Source Code]({})".format(source_code))
 st.sidebar.header("License")
 st.sidebar.markdown(license)
-
 
 # Input
 st.subheader("Input molecules")
@@ -110,16 +110,18 @@ st.markdown("Or upload a CSV file with a single column named SMILES")
 with st.form("csv uploader", clear_on_submit=True):
     file_csv= st.file_uploader(label="", type= ["csv"], label_visibility="collapsed")
     submitted_csv = st.form_submit_button("Run")
-if (submitted_csv==True): 
+    error_placeholder = st.empty()  # Placeholder for error message 
+if (submitted_csv==True):
+    error_placeholder.empty()
     try:
         data_file=pd.read_csv(file_csv)
         data_file.columns = map(str.upper, data_file.columns)
         if "SMILES" not in data_file.columns:
-            st.error("Error: The uploaded file must contain a column named 'SMILES'")
+            error_placeholder.error("Error: The uploaded file must contain a column named 'SMILES'")
         else:
             input_molecules=data_file['SMILES'].tolist()
     except Exception as e:
-        st.error("An error occurred while processing the file, please upload a .csv file")
+        error_placeholder.error("An error occurred while processing the file, please upload a .csv file")
 
 if submitted_written | submitted_csv == True:
     if is_valid_input_molecules():
@@ -134,3 +136,52 @@ if submitted_written | submitted_csv == True:
             st.download_button(
                 "Download as CSV", csv_data, "{}_predictions.csv".format(model_id), "text/csv", key="download-csv"
             )
+
+
+ft = """
+<style>
+a:link , a:visited{
+color: #50285a;  /* theme's text color hex code at 75 percent brightness*/
+background-color: transparent;
+text-decoration: none;
+}
+
+a:hover,  a:active {
+color: #BEE6B4; /* theme's primary color*/
+background-color: transparent;
+text-decoration: underline;
+}
+
+#page-container {
+  position: relative;
+  min-height: 1vh;
+}
+
+footer{
+    visibility:hidden;
+}
+
+.footer {
+position: relative;
+left: 0;
+top:0px;
+bottom: 0px;
+width: 100%;
+background-color: transparent;
+color: #50285a; 
+text-align: left; 
+}
+</style>
+
+<div id="page-container">
+
+<div class="footer">
+<p style='font-size: 0.9em;'><a style='display: inline; text-align: left;' href="https://ersilia.io/model-hub" target="_blank">Try out other models</a><br 'style= top:3px;'>
+<a style='display: inline; text-align: left;' href="https://ersilia.io/" target="_blank">Find more about Ersilia</a><br 'style= top:3px;'>
+<a style='display: inline; text-align: left;' href="https://ersilia.io/donate" target="_blank">Support our mission</a></p>
+</div>
+
+</div>
+"""
+st.markdown("---")
+st.write(ft, unsafe_allow_html=True)
