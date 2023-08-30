@@ -24,7 +24,7 @@ def is_valid_input_molecules():
 # Fetch Model
 params = st.experimental_get_query_params()
 if not "model_id" in params:
-    st.error("You need to enter a model identifier as part of the URL, for example: http://localhost:8503/?model_id=eos7yti")
+    st.error("You need to enter a model identifier as part of the URL, for example: http://localhost:8500/?model_id=eos7yti")
 model_id = params["model_id"][0]
 
 mf = ModelFetcher(force_from_hosted=True, hosted_url=None)
@@ -111,9 +111,16 @@ with st.form("csv uploader", clear_on_submit=True):
     file_csv= st.file_uploader(label="", type= ["csv"], label_visibility="collapsed")
     submitted_csv = st.form_submit_button("Run")
 if (submitted_csv==True): 
-    data_file=pd.read_csv(file_csv)
-    input_molecules=data_file['SMILES'].tolist()
-    
+    try:
+        data_file=pd.read_csv(file_csv)
+        data_file.columns = map(str.upper, data_file.columns)
+        if "SMILES" not in data_file.columns:
+            st.error("Error: The uploaded file must contain a column named 'SMILES'")
+        else:
+            input_molecules=data_file['SMILES'].tolist()
+    except Exception as e:
+        st.error("An error occurred while processing the file, please upload a .csv file")
+
 if submitted_written | submitted_csv == True:
     if is_valid_input_molecules():
         with st.spinner('Running the model...'):
