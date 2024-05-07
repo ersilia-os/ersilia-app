@@ -9,7 +9,7 @@ import pandas as pd
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
 st.set_page_config(
-    page_title=title,
+    page_title="Ersilia Model Hub App",
     page_icon = os.path.join(ROOT, "..", "data", "Symbol_Plum.png"),
     layout="wide",
     initial_sidebar_state="expanded",
@@ -34,29 +34,33 @@ def is_valid_input_molecules():
 
 
 # Fetch Model
-params = st.experimental_get_query_params()
-if not "model_id" in params:
-    st.error("You need to enter a model identifier as part of the URL, for example: http://localhost:8500/?model_id=eos7yti")
-model_id = params["model_id"][0]
+params = st.query_params
+try:
 
-mf = ModelFetcher(force_from_hosted=True, hosted_url=None)
-if not mf.exists(model_id):
-    mf.fetch(model_id)
+    model_id = params["model_id"]
 
-#get info to populate page
-em = ErsiliaModel(model=model_id)
-info = em.info()
+    mf = ModelFetcher(force_from_hosted=True, hosted_url=None)
+    if not mf.exists(model_id):
+        mf.fetch(model_id)
 
-# Extract the desired values
-identifier = info["metadata"]["Identifier"]
-slug = info["metadata"]["Slug"]
-title = info["metadata"]["Title"]
-description = info["metadata"]["Description"]
-task = info["metadata"]["Task"]
-interpretation = info["metadata"]["Interpretation"]
-source_code = info["metadata"]["Source Code"]
-publication = info["metadata"]["Publication"]
-license = info["metadata"]["License"]
+    #get info to populate page
+    em = ErsiliaModel(model=model_id)
+    info = em.info()
+
+    # Extract the desired values
+    identifier = info["metadata"]["Identifier"]
+    slug = info["metadata"]["Slug"]
+    title = info["metadata"]["Title"]
+    description = info["metadata"]["Description"]
+    task = info["metadata"]["Task"]
+    interpretation = info["metadata"]["Interpretation"]
+    source_code = info["metadata"]["Source Code"]
+    publication = info["metadata"]["Publication"]
+    license = info["metadata"]["License"]
+
+except KeyError as e:
+        st.error("You need to enter a model identifier as part of the URL, for example: http://localhost:8500/?model_id=eos7yti")
+        exit()
 
 # Theming
 
