@@ -6,6 +6,19 @@ from ersilia.hub.fetch.fetch import ModelFetcher
 from rdkit import Chem
 import pandas as pd
 
+st.set_page_config(
+    page_title=title,
+    page_icon = os.path.join(ROOT, "..", "data", "Symbol_Plum.png"),
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': None,
+        'Report a bug': None,
+        'About': "# Ersilia Open Source Initiative. [Read more](https://ersilia.io/about-us) about us. [Support](https://ersilia.io/donate) our mission"
+    },
+    )
+
+
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
@@ -47,17 +60,6 @@ publication = info["metadata"]["Publication"]
 license = info["metadata"]["License"]
 
 # Theming
-st.set_page_config(
-    page_title=title,
-    page_icon = os.path.join(ROOT, "..", "data", "Symbol_Plum.png"),
-    layout="wide",
-    initial_sidebar_state="expanded",
-    menu_items={
-        'Get Help': None,
-        'Report a bug': None,
-        'About': "# Ersilia Open Source Initiative. [Read more](https://ersilia.io/about-us) about us. [Support](https://ersilia.io/donate) our mission"
-    },
-    )
 
 css = r'''
     <style>
