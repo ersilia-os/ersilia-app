@@ -6,6 +6,8 @@ from ersilia.hub.fetch.fetch import ModelFetcher
 from rdkit import Chem
 import pandas as pd
 
+ROOT = os.path.dirname(os.path.abspath(__file__))
+
 st.set_page_config(
     page_title=title,
     page_icon = os.path.join(ROOT, "..", "data", "Symbol_Plum.png"),
@@ -18,9 +20,6 @@ st.set_page_config(
     },
     )
 
-
-
-ROOT = os.path.dirname(os.path.abspath(__file__))
 
 # Functions
 def is_valid_input_molecules():
