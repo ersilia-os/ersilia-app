@@ -77,8 +77,6 @@ st.markdown(css, unsafe_allow_html=True)
 st.title(title)
 
 # Side bar
-
-# Side bar
 st.sidebar.image(os.path.join(ROOT, "..","data", "Ersilia_Brand.png"), width=150)
 st.sidebar.title('Model Information')
 st.sidebar.header("Description")

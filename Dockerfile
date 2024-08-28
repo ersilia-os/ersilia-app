@@ -5,9 +5,9 @@ WORKDIR .
 COPY . .
 
 RUN python -m pip install --upgrade pip
-RUN python -m pip install rdkit
-RUN python -m pip install streamlit
-RUN python -m pip install ersilia
+RUN python -m pip install rdkit==2024.3.5
+RUN python -m pip install streamlit==1.38.0
+RUN python -m pip install ersilia==0.1.36
 
 EXPOSE 8501
 CMD ["streamlit", "run", "app/app.py"]
