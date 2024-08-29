@@ -1,9 +1,8 @@
 import streamlit as st
 import os
 import csv
-from ersilia import ErsiliaModel
-from ersilia.hub.fetch.fetch import ModelFetcher
 from rdkit import Chem
+from ersilia_client import ErsiliaClient
 import pandas as pd
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -32,38 +31,56 @@ def is_valid_input_molecules():
             return False
     return True
 
+import requests
 
-# Fetch Model
-params = st.query_params
+def fetch_model_json(url):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Will raise an HTTPError for bad responses
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching the JSON data: {e}")
+        return None
+
+def find_model_host_url(json_data, model_id):
+    for model in json_data:
+        if model.get("Identifier") == model_id:
+            return model.get("Host URL")
+
+# Fetch Model URL
 try:
-
+    params = st.query_params
     model_id = params["model_id"]
-
-    mf = ModelFetcher(force_from_hosted=True, hosted_url=None)
-    if not mf.exists(model_id):
-        mf.fetch(model_id)
-
-    #get info to populate page
-    em = ErsiliaModel(model=model_id)
-    info = em.info()
-
-    # Extract the desired values
-    identifier = info["metadata"]["Identifier"]
-    slug = info["metadata"]["Slug"]
-    title = info["metadata"]["Title"]
-    description = info["metadata"]["Description"]
-    task = info["metadata"]["Task"]
-    interpretation = info["metadata"]["Interpretation"]
-    source_code = info["metadata"]["Source Code"]
-    publication = info["metadata"]["Publication"]
-    license = info["metadata"]["License"]
-
+    json_url = "https://ersilia-model-hub.s3.eu-central-1.amazonaws.com/models.json"
+    json_data = fetch_model_json(json_url)
+    if json_data:
+        try:
+            host_url = find_model_host_url(json_data, model_id)
+        except:
+            st.error("Model not found in our database")
+    if host_url is None:
+        st.error("Model not hosted online")
+        
 except KeyError as e:
         st.error("You need to enter a model identifier as part of the URL, for example: http://localhost:8500/?model_id=eos7yti")
         exit()
 
-# Theming
 
+    
+client = ErsiliaClient(host_url)
+info = client._info()
+# Extract the desired values
+identifier = info["metadata"]["Identifier"]
+slug = info["metadata"]["Slug"]
+title = info["metadata"]["Title"]
+description = info["metadata"]["Description"]
+task = info["metadata"]["Task"]
+interpretation = info["metadata"]["Interpretation"]
+source_code = info["metadata"]["Source Code"]
+publication = info["metadata"]["Publication"]
+license = info["metadata"]["License"]
+
+# Theming
 css = r'''
     <style>
         [data-testid="stForm"] {border: 0px}
@@ -103,7 +120,7 @@ with open(os.path.join(ROOT, "..", "data", "example.csv"), "r") as f:
 example_smi = ("\n".join(smiles))
 st.text(example_smi)
 with st.form("text uploader", clear_on_submit=True):
-    written_input = st.text_area(label="",height=50, label_visibility="collapsed")
+    written_input = st.text_area(label="input",height=50, label_visibility="collapsed")
     submitted_written = st.form_submit_button("Run")
 if (submitted_written==True):
     input_molecules = written_input.split("\n")
@@ -111,7 +128,7 @@ if (submitted_written==True):
     
 st.markdown("Or upload a CSV file with a single column named SMILES")
 with st.form("csv uploader", clear_on_submit=True):
-    file_csv= st.file_uploader(label="", type= ["csv"], label_visibility="collapsed")
+    file_csv= st.file_uploader(label="input csv", type= ["csv"], label_visibility="collapsed")
     submitted_csv = st.form_submit_button("Run")
     error_placeholder = st.empty()  # Placeholder for error message 
 if (submitted_csv==True):
@@ -129,9 +146,7 @@ if (submitted_csv==True):
 if submitted_written | submitted_csv == True:
     if is_valid_input_molecules():
         with st.spinner('Running the model...'):
-            em.serve()
-            df = em.run(input=input_molecules, output="pandas")
-            em.close()
+            df = client.run(input_molecules)
             st.subheader("Results")
             df.rename(columns={"key":"InChiKey", "input": "SMILES"}, inplace=True)
             st.dataframe(df, hide_index=True)
@@ -188,3 +203,8 @@ text-align: left;
 """
 st.markdown("---")
 st.write(ft, unsafe_allow_html=True)
+
+
+
+
+
