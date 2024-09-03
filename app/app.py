@@ -4,6 +4,7 @@ import csv
 from rdkit import Chem
 from ersilia_client import ErsiliaClient
 import pandas as pd
+import requests
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
@@ -30,8 +31,6 @@ def is_valid_input_molecules():
             st.error("Input {0} is not a valid SMILES".format(input_molecule))
             return False
     return True
-
-import requests
 
 def fetch_model_json(url):
     try:
@@ -62,8 +61,8 @@ try:
         st.error("Model not hosted online")
         
 except KeyError as e:
-        st.error("You need to enter a model identifier as part of the URL, for example: http://localhost:8500/?model_id=eos7yti")
-        exit()
+    st.error("You need to enter a model identifier as part of the URL, for example: http://localhost:8500/?model_id=eos7yti")
+    exit()
 
 
     
@@ -143,14 +142,22 @@ if (submitted_csv==True):
     except Exception as e:
         error_placeholder.error("An error occurred while processing the file, please upload a .csv file")
 
+batch_size=20
 if submitted_written | submitted_csv == True:
     if is_valid_input_molecules():
         with st.spinner('Running the model...'):
-            df = client.run(input_molecules)
+            dfs = []
+            for n,i in enumerate(range(0, len(input_molecules), batch_size)):
+                input_ = input_molecules[i:i+batch_size]
+                print(i, len(input_))
+                st.toast(f"Calculating molecule batch {n}")
+                df = client.run(input_)
+                dfs+=[df]
+            df_all = pd.concat(dfs)
             st.subheader("Results")
-            df.rename(columns={"key":"InChiKey", "input": "SMILES"}, inplace=True)
-            st.dataframe(df, hide_index=True)
-            csv_data = df.to_csv(index=False).encode()
+            df_all.rename(columns={"key":"InChiKey", "input": "SMILES"}, inplace=True)
+            st.dataframe(df_all, hide_index=True)
+            csv_data = df_all.to_csv(index=False).encode()
             st.download_button(
                 "Download as CSV", csv_data, "{}_predictions.csv".format(model_id), "text/csv", key="download-csv"
             )
